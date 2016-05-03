@@ -898,6 +898,19 @@ SR_PRIV int sr_packet_copy(const struct sr_datafeed_packet *packet,
 		struct sr_datafeed_packet **copy);
 SR_PRIV void sr_packet_free(struct sr_datafeed_packet *packet);
 
+/*--- session_event.c -------------------------------------------------------*/
+struct sr_event;
+
+SR_PRIV struct sr_event *sr_event_new(void);
+SR_PRIV void sr_event_free(struct sr_event *event);
+SR_PRIV void sr_event_signal(struct sr_event *event);
+SR_PRIV void sr_event_ack(struct sr_event *event);
+
+SR_PRIV int sr_event_source_add(struct sr_session *session,
+	struct sr_event *event, GSourceFunc cb, gpointer cb_data);
+SR_PRIV int sr_event_source_remove(struct sr_session *session,
+	struct sr_event *event);
+
 /*--- session_file.c --------------------------------------------------------*/
 
 #if !HAVE_ZIP_DISCARD
