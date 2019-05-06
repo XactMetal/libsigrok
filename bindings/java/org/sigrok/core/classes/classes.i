@@ -44,6 +44,13 @@ namespace Glib {
   class VariantBase {};
 }
 
+// Xact
+%rename(VariantType) VariantType;
+namespace Glib {
+  class VariantType {};
+}
+// End Xact
+
 %include "bindings/swig/templates.i"
 
 /* Map between std::vector and java.util.Vector */
@@ -363,6 +370,56 @@ typedef jobject jdatafeedcallback;
     });
   }
 }
+
+// Xact
+%extend sigrok::Logic
+{
+  void fillWithData(JNIEnv *env, jbyteArray array, jint off)
+  {
+    env->SetByteArrayRegion( array, off, self->data_length(), (jbyte*)(self->data_pointer()) );
+    
+  }
+}
+// End Xact
+
+// Xact
+%extend sigrok::Configurable
+{
+  jstring variant_toString(JNIEnv *env, Glib::VariantBase variant)
+  {
+    gchar * gv = g_variant_print((GVariant*)(variant.gobj()), false);
+    return env->NewStringUTF((char*)gv);
+  }
+  
+  Glib::VariantType config_datatype(JNIEnv *env, const ConfigKey *key)
+  {
+    return self->config_get(key).get_type();
+  }
+  
+  void config_set_string(JNIEnv *env, const ConfigKey *key, Glib::VariantType type, jstring value)
+  {
+    const char *nativeString = env->GetStringUTFChars(value, 0);
+
+    GVariant* variant = g_variant_parse(type.gobj(), nativeString, NULL, NULL, NULL);
+
+    env->ReleaseStringUTFChars(value, nativeString);
+    
+    self->config_set(key, Glib::VariantBase(variant));
+  }
+  
+  jstring config_get_string(JNIEnv *env, const ConfigKey *key)
+  {
+    gchar * gv = g_variant_print((GVariant*)(self->config_get(key).gobj()), false);
+    return env->NewStringUTF((char*)gv);
+  }
+  
+  jstring config_list_string(JNIEnv *env, const ConfigKey *key)
+  {
+    gchar * gv = g_variant_print((GVariant*)(self->config_list(key).gobj()), false);
+    return env->NewStringUTF((char*)gv);
+  }
+}
+// End Xact
 
 %include "doc.i"
 
